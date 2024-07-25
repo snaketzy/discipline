@@ -127,7 +127,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
               {ele.sourceName}
               {ele.description}  
               </View>
-              <View><Button color="primary" size="small" onClick={() => {
+              <View><Button color={ele.level === "hard" ? "danger" : "primary"} size="small" onClick={() => {
                 this.setState({
                   open:true
                 })
