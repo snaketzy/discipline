@@ -3,8 +3,8 @@
   "description": "自律点数方案",
   "setting": {
     "urlCheck": true,
-    "es6": false,
-    "enhance": false,
+    "es6": true,
+    "enhance": true,
     "compileHotReLoad": false,
     "postcss": false,
     "minified": false,
