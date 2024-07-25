@@ -1,13 +1,15 @@
+/* eslint-disable react/no-unused-state */
 /* eslint-disable react/jsx-closing-bracket-location */
 /* eslint-disable jsx-quotes */
 import { Component, PropsWithChildren } from 'react'
 import { connect } from 'react-redux'
 import { View, Text, ScrollView } from '@tarojs/components'
 
-import { Button, Dialog } from "@taroify/core";
+import { Button, DatetimePicker, Dialog, Picker, Popup } from "@taroify/core";
 import { add, minus, asyncAdd } from '../../actions/counter'
 
 import './index.less'
+import moment from 'moment';
 
 // #region 书写注意
 //
@@ -43,7 +45,13 @@ interface Index {
 
 interface OwnState {
   data: any[];
+  subData: any[];
   open: boolean;
+  height: number;
+  showPopUp: boolean;
+  showTimePicker:boolean;
+  selectedSubDict: any;
+  selectedTime: string;
 }
 
 @connect(({ counter }) => ({
@@ -66,11 +74,16 @@ class Index extends Component<PropsWithChildren,OwnState> {
     super(props); 
     this.state = {
       data: [],
-      open: false
+      subData: [],
+      open: false,
+      height: 0,
+      showPopUp:false,
+      showTimePicker: false,
+      selectedSubDict: undefined,
+      selectedTime: ""
     }
   }
   componentWillReceiveProps (nextProps) {
-    debugger
     console.log(this.props, nextProps)
   }
 
@@ -79,7 +92,14 @@ class Index extends Component<PropsWithChildren,OwnState> {
   componentDidShow () {
     wx.cloud.init()
     
-    this.fetchData()
+    this.fetchData();
+    wx.getSystemInfo({
+      success: (res) => {
+        this.setState({
+          height: res.safeArea.height
+        })
+      }
+    });
    }
 
   componentDidHide () { }
@@ -103,6 +123,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
         // array.forEach(ele => {
         //   console.log(ele.sourceName)
         // })
+        console.log(array)
         this.setState({
           data: array
         })
@@ -110,15 +131,54 @@ class Index extends Component<PropsWithChildren,OwnState> {
     })
   }
 
+  /** 确认提交 */
   public confirm() {
+    if(["1"].indexOf(this.record?.sourceId) > -1) {
+      if(!this.state.selectedSubDict) {
+        wx.showToast({
+          title:"请选择学习内容",
+          icon:"none"
+        })
+        return;
+      }
+    }
+    
+    if(this.state.selectedTime === "") {
+      wx.showToast({
+        title:"请选择学习时间",
+        icon:"none"
+      })
+      return;
+    }
+    this.reset()
+  }
+  /** 重置 */
+  public reset() {
     this.setState({
-      open: false
+      open: false,
+      selectedSubDict: undefined,
+      selectedTime: ""
+    })
+    this.record = undefined;
+  }
+
+  public fetchSubDict() {
+    const db = wx.cloud.database()
+    const _ = db.command;
+    db.collection('collection-discipline-subdict').where({
+      sourceId:_.eq("1")
+    })
+    .get()
+    .then((res: any) => {
+      this.setState({
+        subData: res.data.map((data) => {return {label: data.subSourceName, value: data.subSourceId}})
+      })
     })
   }
 
   render () {
     return (
-      <ScrollView scrollY style={{height: "100%"}}>
+      <ScrollView scrollY style={{height: this.state.height}}>
       <View className='index'>
         {
           this.state.data.length > 0 && this.state.data.map((ele: any, index: number) => {
@@ -127,7 +187,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
               {ele.sourceName}
               {ele.description}  
               </View>
-              <View><Button color={ele.level === "hard" ? "danger" : "primary"} size="small" onClick={() => {
+              <View><Button color={ele.level === "hard" ? "warning" : "primary"} size="small" onClick={() => {
                 this.setState({
                   open:true
                 })
@@ -137,12 +197,67 @@ class Index extends Component<PropsWithChildren,OwnState> {
           })
         }
         <Dialog open={this.state.open} onClose={() => this.setState({open: false})}>
-          <Dialog.Content><View className="dialog-content">{`因【${this.record?.sourceName ?? "--"}】，获得自律点`}</View></Dialog.Content>
+          <Dialog.Content>
+            <View className="dialog-content">
+              {`因【${this.record?.sourceName ?? "--"}】，获得自律点 ${this.record?.value ?? "--"} 点`}
+            </View>
+            {
+              ["1"].indexOf(this.record?.sourceId) > -1 && 
+              <View className="dialog-content">
+                <Button variant="text" color="primary" onClick={() => {
+                  this.fetchSubDict()
+                  this.setState({showPopUp: true})
+                }}>选择学习内容</Button>
+                {this.state.selectedSubDict?.label}
+              </View>
+            }
+            <View className="dialog-content">
+              <Button variant="text" color="primary" onClick={() => {
+                  this.setState({showTimePicker: true})
+                }}>选择学习日期</Button>
+                {this.state.selectedTime}
+            </View>
+          </Dialog.Content>
           <Dialog.Actions>
-            <Button onClick={() => this.confirm()}>取消</Button>
+            <Button onClick={() => this.reset()}>取消</Button>
             <Button onClick={() => this.confirm()}>确认</Button>
           </Dialog.Actions>
         </Dialog>
+        <Popup open={this.state.showPopUp} rounded style={{
+            width: '90%'
+          }} lock>
+          <Picker
+            title="选择"
+            columns={this.state.subData}
+            onConfirm={(value, option) => {
+              this.setState({
+                selectedSubDict: option[0],
+                showPopUp:false
+              })
+            }}
+            onCancel={() => this.setState({showPopUp:false})}
+          >
+          </Picker>
+        </Popup>
+        <Popup open={this.state.showTimePicker} rounded style={{
+            width: '90%'
+          }} lock>
+          <DatetimePicker type="date-hour" defaultValue={new Date()}
+            onConfirm={(date) => {
+              this.setState({
+                selectedTime: moment(date).format("YYYY-MM-DD HH"),
+                showTimePicker:false
+              })
+            }}
+            onCancel={() => this.setState({showTimePicker:false})}
+          >
+            <DatetimePicker.Toolbar>
+              <DatetimePicker.Button>取消</DatetimePicker.Button>
+              <DatetimePicker.Title>选择年月日小时</DatetimePicker.Title>
+              <DatetimePicker.Button>确认</DatetimePicker.Button>
+            </DatetimePicker.Toolbar>
+          </DatetimePicker>
+        </Popup>
       </View>
       </ScrollView>
     )
