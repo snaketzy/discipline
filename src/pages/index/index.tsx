@@ -10,6 +10,7 @@ import { add, minus, asyncAdd } from '../../actions/counter'
 
 import './index.less'
 import moment from 'moment';
+import { fail } from 'assert';
 
 // #region 书写注意
 //
@@ -150,7 +151,35 @@ class Index extends Component<PropsWithChildren,OwnState> {
       })
       return;
     }
-    this.reset()
+    const param = {
+      ...this.record,
+      subSourceId: this.state.selectedSubDict ? this.state.selectedSubDict.value : "",
+      subSourceName: this.state.selectedSubDict ? this.state.selectedSubDict.label : "",
+      studyTime: moment(this.state.selectedTime).format("YYYY-MM-DD HH:mm:ss")
+    };
+    delete param._id;
+    delete param._openid;
+    const db = wx.cloud.database()
+    const _ = db.command;
+    const that = this;
+    db.collection('collection-discipline').add({
+      // data 字段表示需新增的 JSON 数据
+      data: {
+        ...param
+      },
+      success: function(res) {
+        // res 是一个对象，其中有 _id 字段标记刚创建的记录的 id
+        console.log(res)
+        wx.showToast({
+          title:"操作成功",
+          icon:"none"
+        })
+        that.reset()
+      },
+      fail: function(res) {
+        debugger
+      }
+    })
   }
   /** 重置 */
   public reset() {
@@ -166,7 +195,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
     const db = wx.cloud.database()
     const _ = db.command;
     db.collection('collection-discipline-subdict').where({
-      sourceId:_.eq("1")
+      sourceId:_.eq("1,2")
     })
     .get()
     .then((res: any) => {
@@ -202,7 +231,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
               {`因【${this.record?.sourceName ?? "--"}】，获得自律点 ${this.record?.value ?? "--"} 点`}
             </View>
             {
-              ["1"].indexOf(this.record?.sourceId) > -1 && 
+              ["1","2"].indexOf(this.record?.sourceId) > -1 && 
               <View className="dialog-content">
                 <Button variant="text" color="primary" onClick={() => {
                   this.fetchSubDict()
