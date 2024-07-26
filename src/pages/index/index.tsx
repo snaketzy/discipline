@@ -96,8 +96,9 @@ class Index extends Component<PropsWithChildren,OwnState> {
     this.fetchData();
     wx.getSystemInfo({
       success: (res) => {
+        const menuBottomInfo = wx.getMenuButtonBoundingClientRect();
         this.setState({
-          height: res.safeArea.height
+          height: res.safeArea.height - menuBottomInfo.bottom - 20
         })
       }
     });
@@ -134,7 +135,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
 
   /** 确认提交 */
   public confirm() {
-    if(["1"].indexOf(this.record?.sourceId) > -1) {
+    if(["1","2"].indexOf(this.record?.sourceId) > -1) {
       if(!this.state.selectedSubDict) {
         wx.showToast({
           title:"请选择学习内容",
