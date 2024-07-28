@@ -10,7 +10,6 @@ import { add, minus, asyncAdd } from '../../actions/counter'
 
 import './index.less'
 import moment from 'moment';
-import { fail } from 'assert';
 
 // #region 书写注意
 //
@@ -147,7 +146,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
     
     if(this.state.selectedTime === "") {
       wx.showToast({
-        title:"请选择学习时间",
+        title:"请选择归属时间",
         icon:"none"
       })
       return;
@@ -156,7 +155,9 @@ class Index extends Component<PropsWithChildren,OwnState> {
       ...this.record,
       subSourceId: this.state.selectedSubDict ? this.state.selectedSubDict.value : "",
       subSourceName: this.state.selectedSubDict ? this.state.selectedSubDict.label : "",
-      studyTime: moment(this.state.selectedTime).format("YYYY-MM-DD HH:mm:ss")
+      happenTime: moment(this.state.selectedTime).format("YYYY-MM-DD HH:mm:ss"),
+      updateTime: moment().format("YYYY-MM-DD HH:mm:ss"),
+      value: Number(this.record.value)
     };
     delete param._id;
     delete param._openid;
@@ -196,7 +197,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
     const db = wx.cloud.database()
     const _ = db.command;
     db.collection('collection-discipline-subdict').where({
-      sourceId:_.eq("1,2")
+      sourceId:/1,2/i
     })
     .get()
     .then((res: any) => {
@@ -237,14 +238,14 @@ class Index extends Component<PropsWithChildren,OwnState> {
                 <Button variant="text" color="primary" onClick={() => {
                   this.fetchSubDict()
                   this.setState({showPopUp: true})
-                }}>选择学习内容</Button>
+                }}>选择内容</Button>
                 {this.state.selectedSubDict?.label}
               </View>
             }
             <View className="dialog-content">
               <Button variant="text" color="primary" onClick={() => {
                   this.setState({showTimePicker: true})
-                }}>选择学习日期</Button>
+                }}>选择归属日期</Button>
                 {this.state.selectedTime}
             </View>
           </Dialog.Content>

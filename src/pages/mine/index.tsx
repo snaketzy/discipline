@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unused-state */
 /* eslint-disable react/jsx-closing-bracket-location */
 /* eslint-disable jsx-quotes */
 import { Component, PropsWithChildren } from 'react'
@@ -8,6 +9,7 @@ import { Button, Dialog } from "@taroify/core";
 import { add, minus, asyncAdd } from '../../actions/counter'
 
 import './index.less'
+import moment from 'moment';
 
 // #region 书写注意
 //
@@ -44,6 +46,10 @@ interface Index {
 interface OwnState {
   data: any[];
   open: boolean;
+  height: number;
+  allPoints: number;
+  availablePoints: number;
+  todayPoints: number;
 }
 
 @connect(({ counter }) => ({
@@ -66,11 +72,14 @@ class Index extends Component<PropsWithChildren,OwnState> {
     super(props); 
     this.state = {
       data: [],
-      open: false
+      open: false,
+      height:0,
+      allPoints: 0,
+      availablePoints: 0,
+      todayPoints: 0
     }
   }
   componentWillReceiveProps (nextProps) {
-    debugger
     console.log(this.props, nextProps)
   }
 
@@ -80,70 +89,75 @@ class Index extends Component<PropsWithChildren,OwnState> {
     wx.cloud.init()
     
     this.fetchData()
+    wx.getSystemInfo({
+      success: (res) => {
+        const menuBottomInfo = wx.getMenuButtonBoundingClientRect();
+        this.setState({
+          height: res.safeArea.height - menuBottomInfo.bottom - 20
+        })
+      }
+    });
    }
 
   componentDidHide () { }
 
   public fetchData() {
+    const that = this;
     const db = wx.cloud.database()
     const _ = db.command;
-    db.collection('collection-discipline-dict').where({
-      type:_.eq("add")
+    wx.showLoading({
+      title:'载入中...',
+      mask: true
     })
-    .limit(20)
-    .get()
-    .then((res: any) => {
-      db.collection('collection-discipline-dict').where({
-        type:_.eq("add")
-      })
-      .skip(20)
-      .get()
-      .then((nextRes: any) => {
-        const array = [...res.data,...nextRes.data]
-        // array.forEach(ele => {
-        //   console.log(ele.sourceName)
-        // })
-        this.setState({
-          data: array
+    db.collection('collection-discipline').count().then(async(res: any) =>{
+      let total = res.total;
+      console.log(total)
+      // 计算需分几次取
+      const batchTimes = Math.ceil(total / 20)
+      // 承载所有读操作的 promise 的数组
+      for (let i = 0; i < batchTimes; i++) {
+        await db.collection('collection-discipline').skip(i * 20).limit(20).get().then(async(subRes: any) => {
+          const initEle = {value: 0};
+          let new_data = subRes.data
+          let old_data = that.state.data;
+          let allPoints = old_data.concat(new_data).reduce((pre,next) => { return {value: pre.value + next.value}} ,initEle);
+          let availablePoints = old_data.concat(new_data).reduce((pre,next) => { 
+            if(moment(next.happenTime).format("YYYY-MM-DD") !== moment().format("YYYY-MM-DD")) {
+              return {value: pre.value + next.value}
+            } else {
+              return {value: pre.value}
+            }
+          },initEle);
+          let todayPoints = old_data.concat(new_data).reduce((pre,next) => { 
+            if(moment(next.happenTime).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD")) {
+              return {value: pre.value + next.value}
+            } else {
+              return {value: pre.value}
+            }
+          },initEle);
+          
+          that.setState({
+            allPoints: allPoints.value,
+            availablePoints: availablePoints.value,
+            todayPoints: todayPoints.value
+          },() => {
+            console.log(that.state.data)
+            wx.hideLoading()
+          })
         })
-      })
-    })
-  }
-
-  public confirm() {
-    this.setState({
-      open: false
+      }
+      
     })
   }
 
   render () {
     return (
-      <ScrollView scrollY style={{height: "100%"}}>
-      <View className='index'>
-        {
-          this.state.data.length > 0 && this.state.data.map((ele: any, index: number) => {
-            return <View key={index} className="income-item">
-              <View>
-              {ele.sourceName}
-              {ele.description}  
-              </View>
-              <View><Button color="primary" size="small" onClick={() => {
-                this.setState({
-                  open:true
-                })
-                this.record = ele
-              }}>获得自律点</Button></View>
-              </View>
-          })
-        }
-        <Dialog open={this.state.open} onClose={() => this.setState({open: false})}>
-          <Dialog.Content><View className="dialog-content">{`因【${this.record?.sourceName ?? "--"}】，获得自律点`}</View></Dialog.Content>
-          <Dialog.Actions>
-            <Button onClick={() => this.confirm()}>取消</Button>
-            <Button onClick={() => this.confirm()}>确认</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </View>
+      <ScrollView scrollY style={{height: this.state.height}}>
+        <View className='index'>
+            <View>全部自律点：<text>{this.state.allPoints}</text></View>
+            <View>可用自律点(今天获得的自律点不可用)：<text>{this.state.availablePoints}</text></View>
+            <View>今天获得的自律点：<text>{this.state.todayPoints}</text></View>
+        </View>
       </ScrollView>
     )
   }
