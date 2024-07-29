@@ -233,8 +233,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
       },initEle);
 
       this.setState({
-        data: allData,
-        allData:allData,
+        allData:data,
         allPoints: allPoints.value,
         availablePoints: availablePoints.value,
         todayPoints: todayPoints.value
@@ -244,20 +243,38 @@ class Index extends Component<PropsWithChildren,OwnState> {
   }
 
   public custDayRender = (dayProps) => {
-    const isRest = [6, 0].includes(dayProps.weekDay);
+    const isToday = dayProps.isToday;
+    const existData = this.state.allData.filter(ele => {
+      const date = moment(ele.happenTime).format("YYYY-MM-DD");
+      return date === dayProps.dateFormate
+    }).length > 0 ? true : false;
+    const addCount = this.state.allData.filter(ele => {
+      const date = moment(ele.happenTime).format("YYYY-MM-DD");
+      return date === dayProps.dateFormate && ele.type === "add"
+    }).length
+    const deleteCount = this.state.allData.filter(ele => {
+      const date = moment(ele.happenTime).format("YYYY-MM-DD");
+      return date === dayProps.dateFormate && ele.type === "delete"
+    }).length
+    const punishCount = this.state.allData.filter(ele => {
+      const date = moment(ele.happenTime).format("YYYY-MM-DD");
+      return date === dayProps.dateFormate && ele.type === "punish"
+    }).length
+    
     return (
       <>
-        <View style={
-          isRest ? { color: 'red' } : {}
-          }>{dayProps.day}</View>
-        {isRest && <View className="tips">休息</View>}
+        <View className={isToday ? "today" : ""}>{dayProps.day}</View>
+        {existData && <View className="tips">{addCount > 0 ? "加" : ""} {deleteCount > 0 ? "减" : ""} {punishCount > 0 ? <text style={{color:"red"}}>罚</text> : ""}</View>}
       </>
     );
   };
   public onDayClick = (info) => {
+    const clickDate = moment(`${info.year}-${info.month}-${info.day}`).format("YYYY-MM-DD");
+    const matchDate = this.state.allData.filter(ele => moment(ele.happenTime).format("YYYY-MM-DD") === clickDate);
+    
     this.setState({
       open:true,
-      // dateData: this.state.allData
+      dateData: matchDate
     })
   };
   public custWeekRender = (weekItem: string) => {
@@ -276,19 +293,24 @@ class Index extends Component<PropsWithChildren,OwnState> {
             <View>可用自律点(今天获得的自律点不可用)：<text>{this.state.availablePoints}</text></View>
             <View>今天获得的自律点：<text>{this.state.todayPoints}</text></View>
         </View>
-        <CustCalendar
-          // currentView='2024-07-24'
-          // selectedDate='2024-07-29'
-          view="month"
-          selectedDateColor="#346fc2"
-          // custDayRender={this.custDayRender}
-          custWeekRender={this.custWeekRender}
-          onDayClick={this.onDayClick}
-        />
+        {
+          this.state.allData.length > 0 && 
+          <CustCalendar
+            // currentView='2024-07-24'
+            // selectedDate='2024-07-29'
+            view="month"
+            selectedDateColor="#346fc2"
+            custDayRender={this.custDayRender}
+            custWeekRender={this.custWeekRender}
+            onDayClick={this.onDayClick}
+          />
+        }
+       
         <Popup
           open={this.state.open}
           style={{
-            padding: "64px",
+            padding: "16px",
+            width: 300
           }}
           rounded
           lock={false}
@@ -296,7 +318,9 @@ class Index extends Component<PropsWithChildren,OwnState> {
           onClose={()=>this.setState({open:false})}
         >
           {
-            this.state.dateData
+            (this.state.dateData && this.state.dateData.length > 0) ? this.state.dateData.map((ele, eleIndex) => <View key={eleIndex} style={{marginBottom: 16}}><View> {ele.sourceName}{ele.subSourceName ? `-${ele.subSourceName}` : ""}</View> <View style={{color:"#ff0000"}}>{ele.value} 点</View></View>)
+            :
+            <View style={{display:"flex",justifyContent:"center"}}>无数据</View>
           }
         </Popup>
       </ScrollView>
