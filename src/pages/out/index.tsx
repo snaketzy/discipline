@@ -52,6 +52,7 @@ interface OwnState {
   showTimePicker:boolean;
   selectedSubDict: any;
   selectedTime: string;
+  availablePoints: number;
 }
 
 @connect(({ counter }) => ({
@@ -80,7 +81,8 @@ class Index extends Component<PropsWithChildren,OwnState> {
       showPopUp:false,
       showTimePicker: false,
       selectedSubDict: undefined,
-      selectedTime: ""
+      selectedTime: "",
+      availablePoints: 0
     }
   }
   componentWillReceiveProps (nextProps) {
@@ -93,6 +95,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
     wx.cloud.init()
     
     this.fetchData()
+    this.fetchAvailablePoints()
     wx.getSystemInfo({
       success: (res) => {
         const menuBottomInfo = wx.getMenuButtonBoundingClientRect();
@@ -134,6 +137,63 @@ class Index extends Component<PropsWithChildren,OwnState> {
         })
         wx.hideLoading()
       })
+    })
+  }
+
+  /** 获取可用自律点 */
+  public fetchAvailablePoints () {
+    const that = this;
+    const db = wx.cloud.database()
+    const _ = db.command;
+    wx.showLoading({
+      title:'载入中...',
+      mask: true
+    })
+    db.collection('collection-discipline').count().then(async(res: any) =>{
+      let total = res.total;
+      console.log(total)
+      if(total === 0) {
+        that.setState({
+          availablePoints: 0
+        },() => {
+          console.log(that.state.data)
+          wx.hideLoading()
+        })
+      } else {
+        // 计算需分几次取
+        const batchTimes = Math.ceil(total / 20)
+        // 承载所有读操作的 promise 的数组
+        for (let i = 0; i < batchTimes; i++) {
+          await db.collection('collection-discipline').skip(i * 20).limit(20).get().then(async(subRes: any) => {
+            const initEle = {value: 0};
+            let new_data = subRes.data
+            let old_data = that.state.data;
+            let availablePoints = (old_data.concat(new_data) || []).reduce((pre,next) => { 
+              if(moment(next.happenTime).format("YYYY-MM-DD") !== moment().format("YYYY-MM-DD")) {
+                return {value: pre.value + next.value}
+              } else {
+                return {value: pre.value}
+              }
+            },initEle);
+            let todayPoints = old_data.concat(new_data).reduce((pre,next) => { 
+              if(moment(next.happenTime).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD")) {
+                return {value: pre.value + next.value}
+              } else {
+                return {value: pre.value}
+              }
+            },initEle);
+            
+            that.setState({
+              availablePoints: availablePoints.value
+            },() => {
+              console.log(that.state.data)
+              wx.hideLoading()
+            })
+          })
+        }
+      }
+      
+      
     })
   }
 
@@ -228,7 +288,9 @@ class Index extends Component<PropsWithChildren,OwnState> {
                   open:true
                 })
                 this.record = ele
-              }}>{ele?.description?.indexOf("reward") > -1 ? "消费自律点" : "扣除自律点"}</Button></View>
+              }}
+                disabled={(Number(ele.value) > this.state.availablePoints && ele.description === "reward") ? true : false}
+              >{ele?.description?.indexOf("reward") > -1 ? "消费自律点" : "扣除自律点"}</Button></View>
               </View>
           })
         }

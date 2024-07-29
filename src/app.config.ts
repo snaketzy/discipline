@@ -31,14 +31,14 @@ export default defineAppConfig({
       {
         "pagePath": "pages/mine/index",
         "text": "工作台",
-        "iconPath": "images/demand-hall.png",
-        "selectedIconPath": "images/demand-hall-select.png"
+        "iconPath": "images/mine.png",
+        "selectedIconPath": "images/mine-select.png"
       },
       {
         "pagePath": "pages/statistic/index",
         "text": "统计分析",
-        "iconPath": "images/demand-hall.png",
-        "selectedIconPath": "images/demand-hall-select.png"
+        "iconPath": "images/home.png",
+        "selectedIconPath": "images/home-select.png"
       }
     ]
   },
