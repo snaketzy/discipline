@@ -108,6 +108,10 @@ class Index extends Component<PropsWithChildren,OwnState> {
   public fetchData() {
     const db = wx.cloud.database()
     const _ = db.command;
+    wx.showLoading({
+      title:'载入中...',
+      mask: true
+    })
     db.collection('collection-discipline-dict').where({
       type:_.eq("delete")
     })
@@ -128,6 +132,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
         this.setState({
           data: array
         })
+        wx.hideLoading()
       })
     })
   }
@@ -213,24 +218,24 @@ class Index extends Component<PropsWithChildren,OwnState> {
       <View className='index'>
         {
           this.state.data.length > 0 && this.state.data.map((ele: any, index: number) => {
-            return <View key={index} className="out-item">
+            return <View key={index} className={`out-item ${ele?.description?.indexOf("reward") > -1 ? "reward" : "punish"}`}>
               <View>
               {ele.sourceName}
               {ele.description}  
               </View>
-              <View><Button color="primary" size="small" onClick={() => {
+              <View><Button color={ele?.description?.indexOf("reward") > -1 ? "primary" : "warning"} size="small" onClick={() => {
                 this.setState({
                   open:true
                 })
                 this.record = ele
-              }}>消费自律点</Button></View>
+              }}>{ele?.description?.indexOf("reward") > -1 ? "消费自律点" : "扣除自律点"}</Button></View>
               </View>
           })
         }
         <Dialog open={this.state.open} onClose={() => this.setState({open: false})}>
           <Dialog.Content>
             <View className="dialog-content">
-              {`因【${this.record?.sourceName ?? "--"}】，消费自律点 ${this.record?.value ?? "--"} 点`}
+              {`因【${this.record?.sourceName ?? "--"}】，${this.record?.description?.indexOf("reward") > -1 ? "消费自律点" : "扣除自律点"} ${this.record?.value ?? "--"} 点`}
             </View>
             {
               ["1001"].indexOf(this.record?.sourceId) > -1 && 

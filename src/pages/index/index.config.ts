@@ -1,4 +1,4 @@
 export default definePageConfig({
-  navigationBarTitleText: '获得自律点',
+  navigationBarTitleText: '卓然独立，越而胜己',
   disableScroll:true
 })

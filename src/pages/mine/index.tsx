@@ -112,40 +112,52 @@ class Index extends Component<PropsWithChildren,OwnState> {
     db.collection('collection-discipline').count().then(async(res: any) =>{
       let total = res.total;
       console.log(total)
-      // 计算需分几次取
-      const batchTimes = Math.ceil(total / 20)
-      // 承载所有读操作的 promise 的数组
-      for (let i = 0; i < batchTimes; i++) {
-        await db.collection('collection-discipline').skip(i * 20).limit(20).get().then(async(subRes: any) => {
-          const initEle = {value: 0};
-          let new_data = subRes.data
-          let old_data = that.state.data;
-          let allPoints = old_data.concat(new_data).reduce((pre,next) => { return {value: pre.value + next.value}} ,initEle);
-          let availablePoints = old_data.concat(new_data).reduce((pre,next) => { 
-            if(moment(next.happenTime).format("YYYY-MM-DD") !== moment().format("YYYY-MM-DD")) {
-              return {value: pre.value + next.value}
-            } else {
-              return {value: pre.value}
-            }
-          },initEle);
-          let todayPoints = old_data.concat(new_data).reduce((pre,next) => { 
-            if(moment(next.happenTime).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD")) {
-              return {value: pre.value + next.value}
-            } else {
-              return {value: pre.value}
-            }
-          },initEle);
-          
-          that.setState({
-            allPoints: allPoints.value,
-            availablePoints: availablePoints.value,
-            todayPoints: todayPoints.value
-          },() => {
-            console.log(that.state.data)
-            wx.hideLoading()
-          })
+      if(total === 0) {
+        that.setState({
+          allPoints: 0,
+          availablePoints: 0,
+          todayPoints: 0
+        },() => {
+          console.log(that.state.data)
+          wx.hideLoading()
         })
+      } else {
+        // 计算需分几次取
+        const batchTimes = Math.ceil(total / 20)
+        // 承载所有读操作的 promise 的数组
+        for (let i = 0; i < batchTimes; i++) {
+          await db.collection('collection-discipline').skip(i * 20).limit(20).get().then(async(subRes: any) => {
+            const initEle = {value: 0};
+            let new_data = subRes.data
+            let old_data = that.state.data;
+            let allPoints = (old_data.concat(new_data) || []).reduce((pre,next) => { return {value: pre.value + next.value}} ,initEle);
+            let availablePoints = (old_data.concat(new_data) || []).reduce((pre,next) => { 
+              if(moment(next.happenTime).format("YYYY-MM-DD") !== moment().format("YYYY-MM-DD")) {
+                return {value: pre.value + next.value}
+              } else {
+                return {value: pre.value}
+              }
+            },initEle);
+            let todayPoints = old_data.concat(new_data).reduce((pre,next) => { 
+              if(moment(next.happenTime).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD")) {
+                return {value: pre.value + next.value}
+              } else {
+                return {value: pre.value}
+              }
+            },initEle);
+            
+            that.setState({
+              allPoints: allPoints.value,
+              availablePoints: availablePoints.value,
+              todayPoints: todayPoints.value
+            },() => {
+              console.log(that.state.data)
+              wx.hideLoading()
+            })
+          })
+        }
       }
+      
       
     })
   }

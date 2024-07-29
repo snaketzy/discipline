@@ -108,6 +108,10 @@ class Index extends Component<PropsWithChildren,OwnState> {
   public fetchData() {
     const db = wx.cloud.database()
     const _ = db.command;
+    wx.showLoading({
+      title:'载入中...',
+      mask: true
+    })
     db.collection('collection-discipline-dict').where({
       type:_.eq("add")
     })
@@ -128,6 +132,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
         this.setState({
           data: array
         })
+        wx.hideLoading()
       })
     })
   }

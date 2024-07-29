@@ -1,4 +1,4 @@
 export default definePageConfig({
-  navigationBarTitleText: '工作台',
+  navigationBarTitleText: '卓然独立，越而胜己',
   disableScroll:true
 })
