@@ -116,13 +116,13 @@ class Index extends Component<PropsWithChildren,OwnState> {
       mask: true
     })
     db.collection('collection-discipline-dict').where({
-      type:_.eq("delete")
+      type:_.neq("add")
     })
     .limit(20)
     .get()
     .then((res: any) => {
       db.collection('collection-discipline-dict').where({
-        type:_.eq("delete")
+        type:_.neq("add")
       })
       .skip(20)
       .get()

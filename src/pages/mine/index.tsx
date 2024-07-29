@@ -3,13 +3,13 @@
 /* eslint-disable jsx-quotes */
 import { Component, PropsWithChildren } from 'react'
 import { connect } from 'react-redux'
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text, ScrollView } from '@tarojs/components';
+import moment from "moment";
 
 import { Button, Dialog } from "@taroify/core";
 import { add, minus, asyncAdd } from '../../actions/counter'
 
-import './index.less'
-import moment from 'moment';
+import './index.less';
 
 // #region 书写注意
 //
@@ -170,6 +170,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
             <View>可用自律点(今天获得的自律点不可用)：<text>{this.state.availablePoints}</text></View>
             <View>今天获得的自律点：<text>{this.state.todayPoints}</text></View>
         </View>
+        
       </ScrollView>
     )
   }
