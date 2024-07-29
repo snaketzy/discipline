@@ -127,13 +127,14 @@ class Index extends Component<PropsWithChildren,OwnState> {
           // console.log(res.data)
           tasks = tasks.concat(subRes.data)
           if(i === batchTimes -1) {
+            wx.hideLoading()
             this.handleData(tasks)
           }
         })
       }
     })
 
-    wx.hideLoading()
+   
 
 
     // db.collection('collection-discipline').count().then(async(res: any) =>{
@@ -233,11 +234,13 @@ class Index extends Component<PropsWithChildren,OwnState> {
       },initEle);
 
       this.setState({
-        allData:data,
         allPoints: allPoints.value,
         availablePoints: availablePoints.value,
         todayPoints: todayPoints.value
       },() => {
+        this.setState({
+          allData:data,
+        })
         console.log(this.state.data)
       })
   }
@@ -268,13 +271,25 @@ class Index extends Component<PropsWithChildren,OwnState> {
       </>
     );
   };
-  public onDayClick = (info) => {
-    const clickDate = moment(`${info.year}-${info.month}-${info.day}`).format("YYYY-MM-DD");
-    const matchDate = this.state.allData.filter(ele => moment(ele.happenTime).format("YYYY-MM-DD") === clickDate);
+  public onDayClick = (info,dateFormate) => {
     
+    const clickDate = moment(`${info.year}-${info.month}-${info.day}`).format("YYYY-MM-DD");
+    const matchData = this.state.allData.filter(ele => {
+      console.log("happenTime", moment(ele.happenTime).format("YYYY-MM-DD"))
+      return moment(ele.happenTime).format("YYYY-MM-DD") === dateFormate
+    });
+    console.log("info", info)
+    console.log("dateFormate", dateFormate)
+    
+    console.log("所有数据",this.state.allData)
+    console.log("当前日期匹配数据",matchData)
     this.setState({
-      open:true,
-      dateData: matchDate
+      dateData: matchData
+      
+    },() => {
+      this.setState({
+        open:true  
+      })
     })
   };
   public custWeekRender = (weekItem: string) => {
