@@ -333,7 +333,10 @@ class Index extends Component<PropsWithChildren,OwnState> {
           onClose={()=>this.setState({open:false})}
         >
           {
-            (this.state.dateData && this.state.dateData.length > 0) ? this.state.dateData.map((ele, eleIndex) => <View key={eleIndex} style={{marginBottom: 16}}><View> {ele.sourceName}{ele.subSourceName ? `-${ele.subSourceName}` : ""}</View> <View style={{color:"#ff0000"}}>{ele.value} 点</View></View>)
+            (this.state.dateData && this.state.dateData.length > 0) ? <View>
+              {this.state.dateData.map((ele, eleIndex) => <View key={eleIndex} style={{marginBottom: 16}}><View> {ele.sourceName}{ele.subSourceName ? `-${ele.subSourceName}` : ""}</View> <View style={{color: ele.type === "add" ? "#1890ff" : "#ff0000"}}>{ele.value} 点</View></View>)}
+              <View style={{fontWeight:"bold",textAlign:"center", color:"#1890ff"}}>合计 {this.state.dateData.reduce((pre,next) => { return {value: pre.value + next.value}} ,{value: 0}).value} 点</View>
+            </View>
             :
             <View style={{display:"flex",justifyContent:"center"}}>无数据</View>
           }
