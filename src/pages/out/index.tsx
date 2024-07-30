@@ -160,42 +160,86 @@ class Index extends Component<PropsWithChildren,OwnState> {
           wx.hideLoading()
         })
       } else {
-        // 计算需分几次取
-        const batchTimes = Math.ceil(total / 20)
-        // 承载所有读操作的 promise 的数组
-        for (let i = 0; i < batchTimes; i++) {
-          await db.collection('collection-discipline').skip(i * 20).limit(20).get().then(async(subRes: any) => {
-            const initEle = {value: 0};
-            let new_data = subRes.data
-            let old_data = that.state.data;
-            let availablePoints = (old_data.concat(new_data) || []).reduce((pre,next) => { 
-              if(moment(next.happenTime).format("YYYY-MM-DD") !== moment().format("YYYY-MM-DD")) {
-                return {value: pre.value + next.value}
-              } else {
-                return {value: pre.value}
-              }
-            },initEle);
-            let todayPoints = old_data.concat(new_data).reduce((pre,next) => { 
-              if(moment(next.happenTime).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD")) {
-                return {value: pre.value + next.value}
-              } else {
-                return {value: pre.value}
-              }
-            },initEle);
+        // // 计算需分几次取
+        // const batchTimes = Math.ceil(total / 20)
+        // // 承载所有读操作的 promise 的数组
+        // for (let i = 0; i < batchTimes; i++) {
+        //   await db.collection('collection-discipline').skip(i * 20).limit(20).get().then(async(subRes: any) => {
+        //     const initEle = {value: 0};
+        //     let new_data = subRes.data
+        //     let old_data = that.state.data;
+        //     let availablePoints = (old_data.concat(new_data) || []).reduce((pre,next) => { 
+        //       if(moment(next.happenTime).format("YYYY-MM-DD") !== moment().format("YYYY-MM-DD")) {
+        //         return {value: pre.value + next.value}
+        //       } else {
+        //         return {value: pre.value}
+        //       }
+        //     },initEle);
+        //     let todayPoints = old_data.concat(new_data).reduce((pre,next) => { 
+        //       if(moment(next.happenTime).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD")) {
+        //         return {value: pre.value + next.value}
+        //       } else {
+        //         return {value: pre.value}
+        //       }
+        //     },initEle);
             
-            that.setState({
-              availablePoints: availablePoints.value
-            },() => {
-              console.log(that.state.data)
-              wx.hideLoading()
+        //     that.setState({
+        //       availablePoints: availablePoints.value
+        //     },() => {
+        //       console.log(that.state.data)
+        //       wx.hideLoading()
+        //     })
+        //   })
+        // }
+         // 计算需分几次取
+          const batchTimes = Math.ceil(total / 20)
+          // 承载所有读操作的 promise 的数组
+          let tasks: any[] = []
+          for (let i = 0; i < batchTimes; i++) {
+            await db.collection('collection-discipline').skip(i * 20).limit(20).get().then(subRes =>{
+              // console.log(res.data)
+              tasks = tasks.concat(subRes.data)
+              if(i === batchTimes -1) {
+                wx.hideLoading()
+                this.handleData(tasks)
+              }
             })
-          })
-        }
+          }
       }
       
       
     })
   }
+
+  public handleData = (data) =>{
+    let allPoints:any;
+    let availablePoints:any;
+    let todayPoints:any;
+    const initData = [];
+    const initEle = {value: 0};
+
+    allPoints = data.reduce((pre,next) => { return {value: pre.value + next.value}} ,initEle);
+    availablePoints = data.reduce((pre,next) => { 
+      if(moment(next.happenTime).format("YYYY-MM-DD") !== moment().format("YYYY-MM-DD")) {
+        return {value: pre.value + next.value}
+      } else {
+        return {value: pre.value}
+      }
+    },initEle);
+    todayPoints = data.reduce((pre,next) => { 
+      if(moment(next.happenTime).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD")) {
+        return {value: pre.value + next.value}
+      } else {
+        return {value: pre.value}
+      }
+    },initEle);
+
+    this.setState({
+      availablePoints: availablePoints.value
+    })
+}
+
+
 
   /** 确认提交 */
   public confirm() {
