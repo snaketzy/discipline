@@ -132,6 +132,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
         //   console.log(ele.sourceName)
         // })
         console.log(array)
+        
         this.setState({
           data: array
         })
@@ -320,8 +321,9 @@ class Index extends Component<PropsWithChildren,OwnState> {
     return (
       <ScrollView scrollY  style={{height: this.state.height}}>
       <View className='index'>
+        {/* 罚没 */}
         {
-          this.state.data.length > 0 && this.state.data.map((ele: any, index: number) => {
+          this.state.data.length > 0 && this.state.data.filter(obj => obj.type === "punish").map((ele: any, index: number) => {
             return <View key={index} className={`out-item ${ele?.description?.indexOf("reward") > -1 ? "reward" : "punish"}`}>
               <View>
               {ele.sourceName}
@@ -334,7 +336,26 @@ class Index extends Component<PropsWithChildren,OwnState> {
                 this.record = ele
               }}
                 disabled={(Number(ele.value) > this.state.availablePoints && ele.description === "reward") ? true : false}
-              >{ele?.description?.indexOf("reward") > -1 ? "消费自律点" : "扣除自律点"}</Button></View>
+              >{ele?.description?.indexOf("reward") > -1 ? `${(Number(ele.value) > this.state.availablePoints && ele.description === "reward") ? "自律点不足" : "消费自律点"}` : "扣除自律点"}</Button></View>
+              </View>
+          })
+        }
+        {/* 消费 */}
+        {
+          this.state.data.length > 0 && this.state.data.filter(obj => obj.type === "delete").sort((pre,next) => {return Number(pre.value) - Number(next.value)} ).map((ele: any, index: number) => {
+            return <View key={index} className={`out-item ${ele?.description?.indexOf("reward") > -1 ? "reward" : "punish"}`}>
+              <View>
+              {ele.sourceName}
+              {ele.description}  
+              </View>
+              <View><Button color={ele?.description?.indexOf("reward") > -1 ? "primary" : "warning"} size="small" onClick={() => {
+                this.setState({
+                  open:true
+                })
+                this.record = ele
+              }}
+                disabled={(Number(ele.value) > this.state.availablePoints && ele.description === "reward") ? true : false}
+              >{ele?.description?.indexOf("reward") > -1 ? `${(Number(ele.value) > this.state.availablePoints && ele.description === "reward") ? "自律点不足" : "消费自律点"}` : "扣除自律点"}</Button></View>
               </View>
           })
         }

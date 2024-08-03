@@ -52,6 +52,9 @@ interface OwnState {
   availablePoints: number;
   todayPoints: number;
   dateData: any;
+  addPoint: any;
+  deletePoint: any;
+  punishPoint: any;
   allData: any[];
 }
 
@@ -81,7 +84,10 @@ class Index extends Component<PropsWithChildren,OwnState> {
       availablePoints: 0,
       todayPoints: 0,
       dateData: undefined,
-      allData: []
+      allData: [],
+      addPoint: 0,
+      deletePoint: 0,
+      punishPoint: 0
     }
   }
   componentWillReceiveProps (nextProps) {
@@ -219,7 +225,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
 
       allPoints = data.reduce((pre,next) => { return {value: pre.value + next.value}} ,initEle);
       availablePoints = data.reduce((pre,next) => { 
-        if(moment(next.happenTime).format("YYYY-MM-DD") !== moment().format("YYYY-MM-DD")) {
+        if(moment(next.happenTime).format("YYYY-MM-DD") !== moment().format("YYYY-MM-DD") || next.type !== "add") {
           return {value: pre.value + next.value}
         } else {
           return {value: pre.value}
@@ -240,6 +246,24 @@ class Index extends Component<PropsWithChildren,OwnState> {
       },() => {
         this.setState({
           allData:data,
+        },() => {
+          const momentObj = moment
+          const that = this;
+          const addPoint = that.state.allData.filter(ele => {
+            return momentObj(ele.happenTime).format("YYYY-MM") === momentObj().format("YYYY-MM") && ele.type === "add"
+          }).reduce((pre,next) => { return {value: pre.value + next.value}}, {value: 0}).value;
+          const deletePoint = that.state.allData.filter(ele => {
+            return momentObj(ele.happenTime).format("YYYY-MM") === momentObj().format("YYYY-MM") && ele.type === "delete"
+          }).reduce((pre,next) => { return {value: pre.value + next.value}}, {value: 0}).value
+          const punishPoint = that.state.allData.filter(ele => {
+            return momentObj(ele.happenTime).format("YYYY-MM") === momentObj().format("YYYY-MM") && ele.type === "punish"
+          }).reduce((pre,next) => { return {value: pre.value + next.value}}, {value: 0}).value ;
+          
+          this.setState({
+            addPoint,
+            deletePoint,
+            punishPoint: Math.abs(punishPoint)
+          })
         })
         console.log(this.state.data)
       })
@@ -266,8 +290,8 @@ class Index extends Component<PropsWithChildren,OwnState> {
     
     return (
       <>
-        <View className={isToday ? "today" : ""}>{dayProps.day}</View>
-        {existData && <View className="tips">{addCount > 0 ? "加" : ""} {deleteCount > 0 ? "减" : ""} {punishCount > 0 ? <text style={{color:"red"}}>罚</text> : ""}</View>}
+        <View className={isToday ? "today" : dayProps.notCurMonth ? "notCurMonth" : ""}>{dayProps.day}</View>
+        {existData && <View className="tips">{addCount > 0 ? "收" : ""} {deleteCount > 0 ? "支" : ""} {punishCount > 0 ? <text style={{color:"red"}}>罚</text> : ""}</View>}
       </>
     );
   };
@@ -301,6 +325,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
   };
 
   render () {
+    
     return (
       <ScrollView scrollY style={{height: this.state.height}}>
         <View className='index'>
@@ -318,7 +343,31 @@ class Index extends Component<PropsWithChildren,OwnState> {
             custDayRender={this.custDayRender}
             custWeekRender={this.custWeekRender}
             onDayClick={this.onDayClick}
+            onCurrentViewChange={(date) => {
+              const momentObj = moment
+              const that = this;
+              const addPoint = that.state.allData.filter(ele => {
+                return momentObj(ele.happenTime).format("YYYY-MM") === date && ele.type === "add"
+              }).reduce((pre,next) => { return {value: pre.value + next.value}}, {value: 0}).value;
+              const deletePoint = that.state.allData.filter(ele => {
+                return momentObj(ele.happenTime).format("YYYY-MM") === date && ele.type === "delete"
+              }).reduce((pre,next) => { return {value: pre.value + next.value}}, {value: 0}).value
+              const punishPoint = that.state.allData.filter(ele => {
+                return momentObj(ele.happenTime).format("YYYY-MM") === date && ele.type === "punish"
+              }).reduce((pre,next) => { return {value: pre.value + next.value}}, {value: 0}).value ;
+              
+              this.setState({
+                addPoint,
+                deletePoint,
+                punishPoint: Math.abs(punishPoint)
+              })
+              return date
+            }}
           />
+        }
+        {
+          this.state.allData.length > 0 &&
+          <View className='count'>本月获得 <Text style="color:#1890ff"> { this.state.addPoint } </Text> 点，消耗 <Text> { this.state.deletePoint } </Text> 点，扣除 <Text style="color:red"> { this.state.punishPoint } </Text> 点</View>
         }
        
         <Popup
@@ -333,9 +382,20 @@ class Index extends Component<PropsWithChildren,OwnState> {
           onClose={()=>this.setState({open:false})}
         >
           {
-            (this.state.dateData && this.state.dateData.length > 0) ? <View>
-              {this.state.dateData.map((ele, eleIndex) => <View key={eleIndex} style={{marginBottom: 16}}><View> {ele.sourceName}{ele.subSourceName ? `-${ele.subSourceName}` : ""}</View> <View style={{color: ele.type === "add" ? "#1890ff" : "#ff0000"}}>{ele.value} 点</View></View>)}
-              <View style={{fontWeight:"bold",textAlign:"center", color:"#1890ff"}}>合计 {this.state.dateData.reduce((pre,next) => { return {value: pre.value + next.value}} ,{value: 0}).value} 点</View>
+            (this.state.dateData && this.state.dateData.length > 0) ? <View style="height:500px">
+              <View style="height:450px;overflow:scroll">
+                <View>
+                  {this.state.dateData.map((ele, eleIndex) => <View key={eleIndex} style={{marginBottom: 16}}>
+                    <View> {ele.sourceName}{ele.subSourceName ? `-${ele.subSourceName}` : ""}</View>
+                    <View style={{display:"flex",justifyContent:"space-between"}}>
+                      <View style={{color: ele.type === "add" ? "#1890ff" : "#ff0000"}}>{ele.value} 点 </View>  
+                      <View>{ele.type === "add" ? "获得时间" : ele.type === "delete" ? "消费时间" : "扣除时间"} : { ele.happenTime }</View>
+                    </View>
+                  </View>)}  
+                </View>
+              </View>
+              
+              <View className='popup-count' style="height:50px;">合计 {this.state.dateData.reduce((pre,next) => { return {value: pre.value + next.value}} ,{value: 0}).value} 点</View>
             </View>
             :
             <View style={{display:"flex",justifyContent:"center"}}>无数据</View>
