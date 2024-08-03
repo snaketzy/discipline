@@ -54,7 +54,7 @@ const CustCalendar = forwardRef<CustCalendarInstance, CustCalendarProps>(
       custDayRender,
       className,
       custWeekRender,
-      onCurrentViewChange,
+      onCurrentViewChange
     } = props;
     /** 当前锁定的 SwiperItem */
     const [currentCarouselIndex, setCurrentCarouselIndex] = useState(1);

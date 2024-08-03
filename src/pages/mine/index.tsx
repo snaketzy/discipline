@@ -110,7 +110,9 @@ class Index extends Component<PropsWithChildren,OwnState> {
     });
    }
 
-  componentDidHide () { }
+  componentDidHide () { 
+    
+  }
 
   public fetchData() {
     const that = this;
@@ -247,16 +249,25 @@ class Index extends Component<PropsWithChildren,OwnState> {
         this.setState({
           allData:data,
         },() => {
-          const momentObj = moment
           const that = this;
+          const app = getApp();
+          const momentObj = moment
+          let date;
+          if(app.$app.globalData.date) {
+            date = app.$app.globalData.date
+          } else {
+            date = momentObj().format("YYYY-MM")
+          }
+          
+          
           const addPoint = that.state.allData.filter(ele => {
-            return momentObj(ele.happenTime).format("YYYY-MM") === momentObj().format("YYYY-MM") && ele.type === "add"
+            return momentObj(ele.happenTime).format("YYYY-MM") === date && ele.type === "add"
           }).reduce((pre,next) => { return {value: pre.value + next.value}}, {value: 0}).value;
           const deletePoint = that.state.allData.filter(ele => {
-            return momentObj(ele.happenTime).format("YYYY-MM") === momentObj().format("YYYY-MM") && ele.type === "delete"
+            return momentObj(ele.happenTime).format("YYYY-MM") === date && ele.type === "delete"
           }).reduce((pre,next) => { return {value: pre.value + next.value}}, {value: 0}).value
           const punishPoint = that.state.allData.filter(ele => {
-            return momentObj(ele.happenTime).format("YYYY-MM") === momentObj().format("YYYY-MM") && ele.type === "punish"
+            return momentObj(ele.happenTime).format("YYYY-MM") === date && ele.type === "punish"
           }).reduce((pre,next) => { return {value: pre.value + next.value}}, {value: 0}).value ;
           
           this.setState({
@@ -361,6 +372,8 @@ class Index extends Component<PropsWithChildren,OwnState> {
                 deletePoint,
                 punishPoint: Math.abs(punishPoint)
               })
+              const app = getApp()
+              app.$app.globalData.date = date;
               return date
             }}
           />
