@@ -321,9 +321,9 @@ class Index extends Component<PropsWithChildren,OwnState> {
     return (
       <ScrollView scrollY  style={{height: this.state.height}}>
       <View className='index'>
-        {/* 消费 */}
+        {/* 罚没 */}
         {
-          this.state.data.length > 0 && this.state.data.filter(obj => obj.type === "delete").sort((pre,next) => {return Number(pre.value) - Number(next.value)} ).map((ele: any, index: number) => {
+          this.state.data.length > 0 && this.state.data.filter(obj => obj.type === "punish").map((ele: any, index: number) => {
             return <View key={index} className={`out-item ${ele?.description?.indexOf("reward") > -1 ? "reward" : "punish"}`}>
               <View>
               {ele.sourceName}

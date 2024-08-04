@@ -50,7 +50,9 @@ interface OwnState {
   height: number;
   allPoints: number;
   availablePoints: number;
-  todayPoints: number;
+  todayEarnPoints: number;
+  todayPunishPoints: number;
+  todayDeletePoints: number;
   dateData: any;
   addPoint: any;
   deletePoint: any;
@@ -82,7 +84,9 @@ class Index extends Component<PropsWithChildren,OwnState> {
       height:0,
       allPoints: 0,
       availablePoints: 0,
-      todayPoints: 0,
+      todayEarnPoints: 0,
+      todayPunishPoints: 0,
+      todayDeletePoints: 0,
       dateData: undefined,
       allData: [],
       addPoint: 0,
@@ -221,7 +225,9 @@ class Index extends Component<PropsWithChildren,OwnState> {
       let old_data:any[] = [];
       let allPoints:any;
       let availablePoints:any;
-      let todayPoints:any;
+      let todayEarnPoints:any;
+      let todayPunishPoints:any;
+      let todayDeletePoints:any;
       const initData = [];
       const initEle = {value: 0};
 
@@ -233,8 +239,22 @@ class Index extends Component<PropsWithChildren,OwnState> {
           return {value: pre.value}
         }
       },initEle);
-      todayPoints = data.reduce((pre,next) => { 
-        if(moment(next.happenTime).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD")) {
+      todayEarnPoints = data.reduce((pre,next) => { 
+        if(moment(next.happenTime).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD") && next.type ==="add") {
+          return {value: pre.value + next.value}
+        } else {
+          return {value: pre.value}
+        }
+      },initEle);
+      todayPunishPoints = data.reduce((pre,next) => { 
+        if(moment(next.happenTime).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD") && next.type ==="punish") {
+          return {value: pre.value + next.value}
+        } else {
+          return {value: pre.value}
+        }
+      },initEle);
+      todayDeletePoints = data.reduce((pre,next) => { 
+        if(moment(next.happenTime).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD") && next.type ==="delete") {
           return {value: pre.value + next.value}
         } else {
           return {value: pre.value}
@@ -244,7 +264,9 @@ class Index extends Component<PropsWithChildren,OwnState> {
       this.setState({
         allPoints: allPoints.value,
         availablePoints: availablePoints.value,
-        todayPoints: todayPoints.value
+        todayEarnPoints: todayEarnPoints.value,
+        todayPunishPoints: todayPunishPoints.value,
+        todayDeletePoints: todayDeletePoints.value,
       },() => {
         this.setState({
           allData:data,
@@ -302,7 +324,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
     return (
       <>
         <View className={isToday ? "today" : dayProps.notCurMonth ? "notCurMonth" : ""}>{dayProps.day}</View>
-        {existData && <View className="tips">{addCount > 0 ? "收" : ""} {deleteCount > 0 ? "支" : ""} {punishCount > 0 ? <text style={{color:"red"}}>罚</text> : ""}</View>}
+        {existData && <View className="tips">{addCount > 0 ? "收" : ""} {deleteCount > 0 ? "支" : ""} {punishCount > 0 ? <text style={{color:"red"}}>扣</text> : ""}</View>}
       </>
     );
   };
@@ -340,9 +362,11 @@ class Index extends Component<PropsWithChildren,OwnState> {
     return (
       <ScrollView scrollY style={{height: this.state.height}}>
         <View className='index'>
-            <View>全部自律点：<text>{this.state.allPoints}</text></View>
-            <View>可用自律点(今天获得的自律点不可用)：<text>{this.state.availablePoints}</text></View>
-            <View>今天获得的自律点：<text>{this.state.todayPoints}</text></View>
+            <View>全部自律点：<text style={{color:"#1890ff"}}>{this.state.allPoints}</text></View>
+            <View>可用自律点(今天收获的自律点不可用)：<text style={{color:"#1890ff"}}>{this.state.availablePoints}</text></View>
+            <View>今天收获的自律点：<text style={{color:"#1890ff"}}>{this.state.todayEarnPoints}</text></View>
+            <View>今天消费的自律点：<text style={{color:"red"}}>{this.state.todayDeletePoints}</text></View>
+            <View>今天扣除的自律点：<text style={{color:"red"}}>{this.state.todayPunishPoints}</text></View>
         </View>
         {
           this.state.allData.length > 0 && 
@@ -380,7 +404,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
         }
         {
           this.state.allData.length > 0 &&
-          <View className='count'>本月获得 <Text style="color:#1890ff"> { this.state.addPoint } </Text> 点，消耗 <Text> { this.state.deletePoint } </Text> 点，扣除 <Text style="color:red"> { this.state.punishPoint } </Text> 点</View>
+          <View className='count'>本月收获 <Text style="color:#1890ff"> { this.state.addPoint } </Text> 点，消费 <Text> { this.state.deletePoint } </Text> 点，扣除 <Text style="color:red"> { this.state.punishPoint } </Text> 点</View>
         }
        
         <Popup
@@ -402,7 +426,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
                     <View> {ele.sourceName}{ele.subSourceName ? `-${ele.subSourceName}` : ""}</View>
                     <View style={{display:"flex",justifyContent:"space-between"}}>
                       <View style={{color: ele.type === "add" ? "#1890ff" : "#ff0000"}}>{ele.value} 点 </View>  
-                      <View>{ele.type === "add" ? "获得时间" : ele.type === "delete" ? "消费时间" : "扣除时间"} : { ele.happenTime }</View>
+                      <View>{ele.type === "add" ? "收获时间" : ele.type === "delete" ? "消费时间" : "扣除时间"} : { ele.happenTime }</View>
                     </View>
                   </View>)}  
                 </View>

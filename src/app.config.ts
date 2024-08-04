@@ -2,6 +2,7 @@ export default defineAppConfig({
   pages: [
     'pages/index/index',
     'pages/out/index',
+    'pages/punish/index',
     'pages/mine/index',
     'pages/statistic/index'
   ],
@@ -19,6 +20,12 @@ export default defineAppConfig({
       {
         "pagePath": "pages/index/index",
         "text": "获得自律点",
+        "iconPath": "images/demand-hall.png",
+        "selectedIconPath": "images/demand-hall-select.png"
+      },
+      {
+        "pagePath": 'pages/punish/index',
+        "text": "扣除自律点",
         "iconPath": "images/demand-hall.png",
         "selectedIconPath": "images/demand-hall-select.png"
       },

@@ -151,7 +151,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
     
     if(this.state.selectedTime === "") {
       wx.showToast({
-        title:"请选择归属时间",
+        title:"请选择归属日期",
         icon:"none"
       })
       return;
@@ -228,14 +228,14 @@ class Index extends Component<PropsWithChildren,OwnState> {
                   open:true
                 })
                 this.record = ele
-              }}>获得自律点</Button></View>
+              }}>收获自律点</Button></View>
               </View>
           })
         }
         <Dialog open={this.state.open} onClose={() => this.setState({open: false})}>
           <Dialog.Content>
             <View className="dialog-content">
-              {`因【${this.record?.sourceName ?? "--"}】，获得自律点 ${this.record?.value ?? "--"} 点`}
+              {`因【${this.record?.sourceName ?? "--"}】，收获自律点 ${this.record?.value ?? "--"} 点`}
             </View>
             {
               ["1","2"].indexOf(this.record?.sourceId) > -1 && 
