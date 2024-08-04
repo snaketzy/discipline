@@ -53,6 +53,7 @@
     "@tarojs/runtime": "3.6.34",
     "@tarojs/shared": "3.6.34",
     "@tarojs/taro": "3.6.34",
+    "@visactor/taro-vchart": "^1.11.10",
     "custom-calendar-taro": "^2.0.1",
     "moment": "^2.30.1",
     "react": "^18.0.0",

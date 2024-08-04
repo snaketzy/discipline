@@ -12,6 +12,7 @@ export default defineAppConfig({
     navigationBarTitleText: 'Jerry的数仓',
     navigationBarTextStyle: 'black'
   },
+  lazyCodeLoading: "requiredComponents",
   tabBar: {
     "color": "#969799",
     "selectedColor": "#2660FF",
