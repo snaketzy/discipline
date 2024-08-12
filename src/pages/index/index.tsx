@@ -128,9 +128,10 @@ class Index extends Component<PropsWithChildren,OwnState> {
         // array.forEach(ele => {
         //   console.log(ele.sourceName)
         // })
-        console.log(array)
+        
+        const dataArray = array.sort((a,b) => a.value-b.value)
         this.setState({
-          data: array
+          data: dataArray
         })
         wx.hideLoading()
       })

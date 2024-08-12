@@ -294,7 +294,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
           
           this.setState({
             addPoint,
-            deletePoint,
+            deletePoint: Math.abs(deletePoint),
             punishPoint: Math.abs(punishPoint)
           })
         })
@@ -324,7 +324,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
     return (
       <>
         <View className={isToday ? "today" : dayProps.notCurMonth ? "notCurMonth" : ""}>{dayProps.day}</View>
-        {existData && <View className="tips">{addCount > 0 ? "收" : ""} {deleteCount > 0 ? "支" : ""} {punishCount > 0 ? <text style={{color:"red"}}>扣</text> : ""}</View>}
+        {existData && <View className="tips">{addCount > 0 ? "收" : ""} {deleteCount > 0 ? <text style={{color:"green"}}>支</text> : ""} {punishCount > 0 ? <text style={{color:"red"}}>扣</text> : ""}</View>}
       </>
     );
   };
@@ -365,8 +365,8 @@ class Index extends Component<PropsWithChildren,OwnState> {
             <View>全部自律点：<text style={{color:"#1890ff"}}>{this.state.allPoints}</text></View>
             <View>可用自律点(今天收获的自律点不可用)：<text style={{color:"#1890ff"}}>{this.state.availablePoints}</text></View>
             <View>今天收获的自律点：<text style={{color:"#1890ff"}}>{this.state.todayEarnPoints}</text></View>
-            <View>今天消费的自律点：<text style={{color:"red"}}>{this.state.todayDeletePoints}</text></View>
-            <View>今天扣除的自律点：<text style={{color:"red"}}>{this.state.todayPunishPoints}</text></View>
+            <View>今天消费的自律点：<text style={{color:"green"}}>{Math.abs(this.state.todayDeletePoints)}</text></View>
+            <View>今天扣除的自律点：<text style={{color:"red"}}>{Math.abs(this.state.todayPunishPoints)}</text></View>
         </View>
         {
           this.state.allData.length > 0 && 
@@ -393,7 +393,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
               
               this.setState({
                 addPoint,
-                deletePoint,
+                deletePoint: Math.abs(deletePoint),
                 punishPoint: Math.abs(punishPoint)
               })
               const app = getApp()
@@ -404,7 +404,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
         }
         {
           this.state.allData.length > 0 &&
-          <View className='count'>本月收获 <Text style="color:#1890ff"> { this.state.addPoint } </Text> 点，消费 <Text> { this.state.deletePoint } </Text> 点，扣除 <Text style="color:red"> { this.state.punishPoint } </Text> 点</View>
+          <View className='count'>本月收获 <Text style="color:#1890ff"> { this.state.addPoint } </Text> 点，消费 <Text style="color:green"> { this.state.deletePoint } </Text> 点，扣除 <Text style="color:red"> { this.state.punishPoint } </Text> 点</View>
         }
        
         <Popup
