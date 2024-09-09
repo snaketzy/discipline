@@ -5,11 +5,11 @@ import { Component, PropsWithChildren } from 'react'
 import { connect } from 'react-redux'
 import { View, Text, ScrollView } from '@tarojs/components'
 
+import moment from 'moment';
 import { Button, DatetimePicker, Dialog, Picker, Popup } from "@taroify/core";
 import { add, minus, asyncAdd } from '../../actions/counter'
 
 import './index.less'
-import moment from 'moment';
 
 // #region 书写注意
 //
@@ -132,9 +132,11 @@ class Index extends Component<PropsWithChildren,OwnState> {
         //   console.log(ele.sourceName)
         // })
         console.log(array)
+
+        const dataArray = array.sort((a,b) => a.value-b.value)
         
         this.setState({
-          data: array
+          data: dataArray
         })
         wx.hideLoading()
       })
@@ -327,7 +329,9 @@ class Index extends Component<PropsWithChildren,OwnState> {
             return <View key={index} className={`out-item ${ele?.description?.indexOf("reward") > -1 ? "reward" : "punish"}`}>
               <View>
               {ele.sourceName}
-              {ele.description}  
+              {
+                ele.description ? `【${ele.description}】` : ""
+              }
               </View>
               <View><Button color={ele?.description?.indexOf("reward") > -1 ? "primary" : "warning"} size="small" onClick={() => {
                 this.setState({

@@ -340,6 +340,7 @@ class Index extends Component<PropsWithChildren,OwnState> {
     
     console.log("所有数据",this.state.allData)
     console.log("当前日期匹配数据",matchData)
+    
     this.setState({
       dateData: matchData
       
@@ -425,14 +426,14 @@ class Index extends Component<PropsWithChildren,OwnState> {
                   {this.state.dateData.map((ele, eleIndex) => <View key={eleIndex} style={{marginBottom: 16}}>
                     <View> {ele.sourceName}{ele.subSourceName ? `-${ele.subSourceName}` : ""}</View>
                     <View style={{display:"flex",justifyContent:"space-between"}}>
-                      <View style={{color: ele.type === "add" ? "#1890ff" : "#ff0000"}}>{ele.value} 点 </View>  
-                      <View>{ele.type === "add" ? "收获时间" : ele.type === "delete" ? "消费时间" : "扣除时间"} : { ele.happenTime }</View>
+                      <View style={{color: ele.type === "add" ? "#1890ff" : ele.type==="punish" ? "#ff0000" : "green"}}>{Math.abs(ele.value)} 点 </View>  
+                      <View>{ele.type === "add" ? <text style={{ color:"#1890ff" }}>收获时间</text> : ele.type === "delete" ? <text style={{color:"green"}}>消费时间</text> : <text style={{color:"red"}}>扣除时间</text>} : { ele.happenTime }</View>
                     </View>
                   </View>)}  
                 </View>
               </View>
               
-              <View className='popup-count' style="height:50px;">合计 {this.state.dateData.reduce((pre,next) => { return {value: pre.value + next.value}} ,{value: 0}).value} 点</View>
+              <View className='popup-count' style="height:50px;">合计 { this.state.dateData.reduce((pre,next) => { return {value: pre.value + next.value}} ,{value: 0}).value} 点</View>
             </View>
             :
             <View style={{display:"flex",justifyContent:"center"}}>无数据</View>
